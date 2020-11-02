@@ -92,7 +92,7 @@ export class CustomExplorerProvider implements vscode.TreeDataProvider<CustomNod
             if(label){
                 lb=label
             }
-            const webView = createWebView(this.context, vscode.ViewColumn.Active, lb);
+            const webView = createWebView(this.context, vscode.ViewColumn.Active, lb,message);
             this.context.subscriptions.push(webView);
         }
 	}

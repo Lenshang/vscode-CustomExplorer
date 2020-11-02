@@ -83,7 +83,7 @@ class CustomExplorerProvider {
             if (label) {
                 lb = label;
             }
-            const webView = WebViewHelper_1.createWebView(this.context, vscode.ViewColumn.Active, lb);
+            const webView = WebViewHelper_1.createWebView(this.context, vscode.ViewColumn.Active, lb, message);
             this.context.subscriptions.push(webView);
         }
     }

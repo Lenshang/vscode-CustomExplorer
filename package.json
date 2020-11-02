@@ -2,7 +2,7 @@
 	"name": "customexplorer",
 	"displayName": "CustomExplorer",
 	"description": "",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"publisher": "LenShang",
 	"repository": "https://github.com/Lenshang/vscode-CustomExplorer",
 	"engines": {
