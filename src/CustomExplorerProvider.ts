@@ -1,21 +1,42 @@
+import { AnyARecord } from 'dns';
 import * as vscode from 'vscode';
+import {createWebView} from './utils/WebViewHelper';
 interface ContentModel{
     label:string;
     path:string;
     content:Array<ContentModel>|string;
+    node_type:"notify"|"folder"|"file"|"link"|undefined|null;
 }
 export class CustomExplorerProvider implements vscode.TreeDataProvider<CustomNode>{
-    onDidChangeTreeData?: vscode.Event<void | CustomNode | null | undefined> | undefined;
+    private _onDidChangeTreeData: vscode.EventEmitter<CustomNode | undefined | void> = new vscode.EventEmitter<CustomNode | undefined | void>();
+    onDidChangeTreeData?: vscode.Event<void | CustomNode | null | undefined> | undefined = this._onDidChangeTreeData.event;
     content:Array<CustomNode>;
-    constructor(){
+    workUri:vscode.WorkspaceFolder|undefined;
+    context:vscode.ExtensionContext;
+    constructor(context:vscode.ExtensionContext){
         var _items=vscode.workspace.getConfiguration().get('custom-explorer.content');
         this.content=[]
-        vscode.commands.registerCommand('customexplorer.showInfo', (msg) => this.showMessage(msg));
+        vscode.commands.registerCommand('customexplorer.showInfo', (lb,node_type,msg) => this.showMessage(lb,node_type,msg));
+        vscode.commands.registerCommand('customexplorer.refresh', () => this.refresh());
+        if(vscode.workspace.workspaceFolders){
+            this.workUri=vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file')[0];
+        }
         if(_items){
             (_items as Array<ContentModel>).forEach(item => {
-                this.content.push(new CustomNode(item));
+                this.content.push(new CustomNode(item,this.workUri));
             });
         }
+        this.context=context;
+    }
+    refresh(){
+        this.content=[]
+        var _items=vscode.workspace.getConfiguration().get('custom-explorer.content');
+        if(_items){
+            (_items as Array<ContentModel>).forEach(item => {
+                this.content.push(new CustomNode(item,this.workUri));
+            });
+        }
+        this._onDidChangeTreeData.fire();
     }
     getTreeItem(element: CustomNode): vscode.TreeItem | Thenable<vscode.TreeItem> {
         //return element
@@ -29,7 +50,7 @@ export class CustomExplorerProvider implements vscode.TreeDataProvider<CustomNod
                 label:element.label,
                 command:  {
                     command: 'customexplorer.showInfo',
-                    arguments: [element.content],
+                    arguments: [element.label,element.node_type,element.content],
                     title: 'Show Infomation'
                 }
             };
@@ -62,36 +83,63 @@ export class CustomExplorerProvider implements vscode.TreeDataProvider<CustomNod
         }
 
     }
-	private showMessage(message: string): void {
-		vscode.window.showInformationMessage(message);
+	private showMessage(label:string|undefined,node_type:"notify"|"folder"|"file"|"link",message: string): void {
+        if(node_type=="notify"){
+            vscode.window.showInformationMessage(message);
+        }
+		else if(node_type=="link"){
+            var lb:string=message;
+            if(label){
+                lb=label
+            }
+            const webView = createWebView(this.context, vscode.ViewColumn.Active, lb);
+            this.context.subscriptions.push(webView);
+        }
 	}
 }
 
 export class CustomNode extends vscode.TreeItem{
     isFolder:boolean;
     content:Array<CustomNode>|string;
+    node_type:"notify"|"folder"|"file"|"link";
     //contentStr:string;
-    constructor(data:ContentModel, collapsibleState?: vscode.TreeItemCollapsibleState){
-        if(data.content){
+    constructor(data:ContentModel,workUri:vscode.WorkspaceFolder|undefined, collapsibleState?: vscode.TreeItemCollapsibleState){
+        if(data.node_type=="link"){
+            super(data.label,vscode.TreeItemCollapsibleState.None);
+            this.isFolder=false;
+            this.content=data.content as string;
+            this.node_type="link"
+        }
+        else if(data.content){
             if(typeof data.content === "string"){
                 super(data.label,vscode.TreeItemCollapsibleState.None);
                 this.isFolder=false;
                 this.content=data.content;
+                this.node_type="notify"
             }
             else{
                 super(data.label,vscode.TreeItemCollapsibleState.Collapsed);
                 this.isFolder=true;
                 this.content=[];
+                this.node_type="folder"
                 data.content.forEach(item => {
-                    let _new=new CustomNode(item);
+                    let _new=new CustomNode(item,workUri);
                     (this.content as Array<CustomNode>).push(_new);
                 });
             }
 
         }
         else{
-            let resourceUri=vscode.Uri.file(data.path);
-            super(resourceUri,vscode.TreeItemCollapsibleState.None);
+            let resourceUri=null;
+            if(workUri){
+                resourceUri=vscode.Uri.joinPath(workUri.uri,data.path);
+            }
+            else{
+                resourceUri=vscode.Uri.file(data.path);
+            }
+            super(data.label,vscode.TreeItemCollapsibleState.None);
+            this.node_type="file"
+            this.resourceUri=resourceUri;
             this.isFolder=false;
             this.content=[];
         }

@@ -4,7 +4,7 @@
 	"description": "",
 	"version": "0.0.1",
 	"publisher": "LenShang",
-	"repository":"https://github.com/Lenshang/vscode-CustomExplorer",
+	"repository": "https://github.com/Lenshang/vscode-CustomExplorer",
 	"engines": {
 		"vscode": "^1.50.0"
 	},
@@ -24,6 +24,14 @@
 			{
 				"command": "customexplorer.showInfo",
 				"title": "Show Information"
+			},
+			{
+				"command": "customexplorer.refresh",
+				"title": "Refresh List",
+				"icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
+				}
 			}
 		],
 		"views": {
@@ -34,34 +42,46 @@
 				}
 			]
 		},
-		"configuration": [{
-			"title": "Custom Explorer Configuration",
-			"properties": {
-				"custom-explorer.content": {
-					"type": "array",
-					"default": [
-						{
-							"label":"请先点我",
-							"content":"请在项目的VSCODE设置中配置custom-explorer.content选项!"
-						},
-						{
-							"label":"关于",
-							"content":"2020 LenShang"
-						},
-						{
-							"label":"文件夹测试",
-							"content":[
-								{
-									"label":"文件夹下的CSS文件",
-									"path":"D:/vscode.css"
-								}
-							]
-						}
-					],
-					"description": "Custom Explorer Configuration."
+		"menus": {
+			"view/title": [
+				{
+					"command": "customexplorer.refresh",
+					"when": "view == myexplorer",
+					"group": "navigation"
+				}
+			]
+		},
+		"configuration": [
+			{
+				"title": "Custom Explorer Configuration",
+				"properties": {
+					"custom-explorer.content": {
+						"type": "array",
+						"default": [
+							{
+								"label": "请先点我",
+								"content": "请在项目的VSCODE设置中配置custom-explorer.content选项!"
+							},
+							{
+								"label": "关于",
+								"content": "2020 LenShang"
+							},
+							{
+								"label": "文件夹例子",
+								"content": [
+									{
+										"label": "超链接例",
+										"content": "https://www.baidu.com/",
+										"node_type":"link"
+									}
+								]
+							}
+						],
+						"description": "Custom Explorer Configuration."
+					}
 				}
 			}
-		}]
+		]
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
