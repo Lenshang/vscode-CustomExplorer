@@ -1,11 +1,11 @@
 import { AnyARecord } from 'dns';
 import * as vscode from 'vscode';
-import {createWebView} from './utils/WebViewHelper';
+import {createWebView,createWebViewByHtml} from './utils/WebViewHelper';
 interface ContentModel{
     label:string;
     path:string;
     content:Array<ContentModel>|string;
-    node_type:"notify"|"folder"|"file"|"link"|undefined|null;
+    node_type:"notify"|"folder"|"file"|"link"|"script"|"html"|undefined|null;
 }
 export class CustomExplorerProvider implements vscode.TreeDataProvider<CustomNode>{
     private _onDidChangeTreeData: vscode.EventEmitter<CustomNode | undefined | void> = new vscode.EventEmitter<CustomNode | undefined | void>();
@@ -83,9 +83,24 @@ export class CustomExplorerProvider implements vscode.TreeDataProvider<CustomNod
         }
 
     }
-	private showMessage(label:string|undefined,node_type:"notify"|"folder"|"file"|"link",message: string): void {
+	private showMessage(label:string|undefined,node_type:string,message: string): void {
         if(node_type=="notify"){
             vscode.window.showInformationMessage(message);
+        }
+        else if(node_type=="script"){
+            let func:any=eval(message);
+            let r:any=func();
+            if(typeof r==="string"){
+                vscode.window.showInformationMessage(r);
+            }
+        }
+        else if(node_type=="html"){
+            let lb="UnNamedPage"
+            if(label){
+                lb=label
+            }
+            let view=createWebViewByHtml(this.context, vscode.ViewColumn.Active, lb,message);
+            this.context.subscriptions.push(view);
         }
 		else if(node_type=="link"){
             var lb:string=message;
@@ -101,14 +116,20 @@ export class CustomExplorerProvider implements vscode.TreeDataProvider<CustomNod
 export class CustomNode extends vscode.TreeItem{
     isFolder:boolean;
     content:Array<CustomNode>|string;
-    node_type:"notify"|"folder"|"file"|"link";
+    node_type:"notify"|"folder"|"file"|"link"|"script"|"html";
     //contentStr:string;
     constructor(data:ContentModel,workUri:vscode.WorkspaceFolder|undefined, collapsibleState?: vscode.TreeItemCollapsibleState){
         if(data.node_type=="link"){
             super(data.label,vscode.TreeItemCollapsibleState.None);
             this.isFolder=false;
             this.content=data.content as string;
-            this.node_type="link"
+            this.node_type=data.node_type
+        }
+        else if(data.node_type=="script" || data.node_type=="html"){
+            super(data.label,vscode.TreeItemCollapsibleState.None);
+            this.isFolder=false;
+            this.content=data.content as string;
+            this.node_type=data.node_type;
         }
         else if(data.content){
             if(typeof data.content === "string"){

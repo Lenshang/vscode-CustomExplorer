@@ -2,7 +2,7 @@
 	"name": "customexplorer",
 	"displayName": "CustomExplorer",
 	"description": "",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"publisher": "LenShang",
 	"repository": "https://github.com/Lenshang/vscode-CustomExplorer",
 	"engines": {
@@ -73,6 +73,16 @@
 										"label": "超链接例",
 										"content": "https://www.baidu.com/",
 										"node_type":"link"
+									},
+									{
+										"label": "Html页面例子",
+										"content": "<div><h1>Custom Explorer</h1> <h3>Custom Your Explorer</h3></div>",
+										"node_type":"html"
+									},
+									{
+										"label": "脚本例子:当前时间",
+										"content": "()=>{return Date();}",
+										"node_type":"script"
 									}
 								]
 							}

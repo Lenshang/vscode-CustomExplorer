@@ -78,6 +78,21 @@ class CustomExplorerProvider {
         if (node_type == "notify") {
             vscode.window.showInformationMessage(message);
         }
+        else if (node_type == "script") {
+            let func = eval(message);
+            let r = func();
+            if (typeof r === "string") {
+                vscode.window.showInformationMessage(r);
+            }
+        }
+        else if (node_type == "html") {
+            let lb = "UnNamedPage";
+            if (label) {
+                lb = label;
+            }
+            let view = WebViewHelper_1.createWebViewByHtml(this.context, vscode.ViewColumn.Active, lb, message);
+            this.context.subscriptions.push(view);
+        }
         else if (node_type == "link") {
             var lb = message;
             if (label) {
@@ -96,7 +111,13 @@ class CustomNode extends vscode.TreeItem {
             super(data.label, vscode.TreeItemCollapsibleState.None);
             this.isFolder = false;
             this.content = data.content;
-            this.node_type = "link";
+            this.node_type = data.node_type;
+        }
+        else if (data.node_type == "script" || data.node_type == "html") {
+            super(data.label, vscode.TreeItemCollapsibleState.None);
+            this.isFolder = false;
+            this.content = data.content;
+            this.node_type = data.node_type;
         }
         else if (data.content) {
             if (typeof data.content === "string") {

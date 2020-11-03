@@ -1,18 +1,18 @@
 import { ExtensionContext, ViewColumn, WebviewPanel, window, commands } from 'vscode';
 
-let webviewPanel : WebviewPanel | undefined;
+let webviewPanel: WebviewPanel | undefined;
 
 export function createWebView(
-    context: ExtensionContext,      
-    viewColumn: ViewColumn,         
+    context: ExtensionContext,
+    viewColumn: ViewColumn,
     label: string,
-    url:string        
+    url: string
 ) {
 
-    if(webviewPanel === undefined) {
-    
+    if (webviewPanel === undefined) {
+
         webviewPanel = window.createWebviewPanel(
-        
+
             'webView',                          // 标识，随意命名
             label,                              // 面板标题
             viewColumn,                         // 展示在哪个面板上
@@ -20,11 +20,11 @@ export function createWebView(
                 retainContextWhenHidden: true,  // 控制是否保持webview面板的内容（iframe），即使面板不再可见。
                 enableScripts: true             // 下面的 html 页可以使用 Scripts
             }
-            
+
         )
-        
+
         webviewPanel.webview.html = getIframeHtml(url);
-        
+
     } else {
         webviewPanel.title = label;
         webviewPanel.reveal();
@@ -34,6 +34,31 @@ export function createWebView(
         webviewPanel = undefined;
     });
 
+    return webviewPanel;
+}
+export function createWebViewByHtml(
+    context: ExtensionContext,
+    viewColumn: ViewColumn,
+    label: string,
+    html: string) {
+    if (webviewPanel === undefined) {
+        webviewPanel = window.createWebviewPanel(
+            'webView',                          // 标识，随意命名
+            label,                              // 面板标题
+            viewColumn,                         // 展示在哪个面板上
+            {
+                retainContextWhenHidden: true,  // 控制是否保持webview面板的内容（iframe），即使面板不再可见。
+                enableScripts: true             // 下面的 html 页可以使用 Scripts
+            }
+        )
+        webviewPanel.webview.html = html;
+    } else {
+        webviewPanel.title = label;
+        webviewPanel.reveal();
+    }
+    webviewPanel.onDidDispose(() => {
+        webviewPanel = undefined;
+    });
     return webviewPanel;
 }
 
